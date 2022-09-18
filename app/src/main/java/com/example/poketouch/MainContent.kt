@@ -16,6 +16,7 @@ import kotlin.concurrent.thread
 
 class MainContent : Fragment() {
     private var _binding: ContentMainBinding? = null
+    private var running = true
 
     private val binding get() = _binding!!
 
@@ -82,6 +83,10 @@ class MainContent : Fragment() {
             println("##### Starting emulation...")
             while (true) {
                 if (emulator.numberOfSamplesInAudioBuffer > 6000) continue;
+                if (!running) {
+                    Thread.sleep(100)
+                    continue
+                }
                 val response = emulator.executeFrame()
                 if (response > -1) {
                     binding.screen.getPixelsFromEmulator(emulator)
@@ -102,6 +107,16 @@ class MainContent : Fragment() {
                 Thread.sleep(((1000 / 60) * audioBufFill).toLong())
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        running = false
+    }
+
+    override fun onStart() {
+        super.onStart()
+        running = true
     }
 
     override fun onDestroyView() {
