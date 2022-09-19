@@ -10,6 +10,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.example.poketouch.databinding.ContentMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
@@ -90,7 +92,7 @@ class MainContent : Fragment() {
                 val response = emulator.executeFrame()
                 if (response > -1) {
                     binding.screen.getPixelsFromEmulator(emulator)
-                    binding.screen.redraw()
+                    binding.screen.drawScreen()
 
                     audioBufLen = emulator.numberOfSamplesInAudioBuffer * 2
                     val audioArray = ByteArray(audioBufLen)
