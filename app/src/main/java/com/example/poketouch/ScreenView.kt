@@ -9,7 +9,6 @@ import android.util.AttributeSet
 import android.view.SurfaceView
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
-import kotlinx.coroutines.Runnable
 
 class ScreenView: SurfaceView {
     object Dims {
@@ -20,8 +19,7 @@ class ScreenView: SurfaceView {
     private lateinit var extraCanvas: Canvas
     private lateinit var extraBitmap: Bitmap
     private var scaleFactor: Int = 1
-    private var frontBuffer = Array(Dims.Y) { IntArray(Dims.X) }
-    private var backBuffer  = Array(Dims.Y) { IntArray(Dims.X) }
+    private var pixelBuffer = Array(Dims.Y) { IntArray(Dims.X) }
     private val backgroundColor = ResourcesCompat.getColor(resources, R.color.black, null)
 
     constructor(context: Context, attributeSet: AttributeSet): super(context, attributeSet) {
@@ -32,7 +30,6 @@ class ScreenView: SurfaceView {
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
         if (::extraBitmap.isInitialized) extraBitmap.recycle()
-        // extraBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         extraBitmap = Bitmap.createBitmap(Dims.X, Dims.Y, Bitmap.Config.ARGB_8888)
         extraCanvas = Canvas(extraBitmap)
         extraCanvas.drawColor(backgroundColor)
@@ -45,7 +42,7 @@ class ScreenView: SurfaceView {
 
         for (x in 0 until Dims.X) {
             for (y in 0 until Dims.Y) {
-                val px = frontBuffer[y][x]
+                val px = pixelBuffer[y][x]
                 extraBitmap.setPixel(
                     x,
                     y,
@@ -54,7 +51,7 @@ class ScreenView: SurfaceView {
             }
         }
 
-        frontBuffer = backBuffer.also { backBuffer = frontBuffer }
+        // frontBuffer = backBuffer.also { backBuffer = frontBuffer }
 
         // TODO Why does canvas become null?
         val canvas = holder.lockCanvas() ?: return
@@ -62,11 +59,13 @@ class ScreenView: SurfaceView {
 
         val marginLeft = (width - (Dims.X * scaleFactor)) / 2
         val marginTop = (height - (Dims.Y * scaleFactor)) / 2
+        val maxX = Dims.X * scaleFactor + marginLeft
+        val maxY = Dims.Y * scaleFactor + marginTop
 
         canvas.drawBitmap(
             extraBitmap,
             null,
-            Rect(marginLeft, marginTop, Dims.X * scaleFactor + marginLeft, Dims.Y * scaleFactor + marginTop),
+            Rect(marginLeft, marginTop, maxX, maxY),
             null
         )
         canvas.restore()
@@ -82,7 +81,8 @@ class ScreenView: SurfaceView {
                 val r = emulator.memory[start + 0].toInt()
                 val g = emulator.memory[start + 1].toInt()
                 val b = emulator.memory[start + 2].toInt()
-                backBuffer[y][x] = (r shl 16) + (g shl 8) + b
+                // backBuffer[y][x] = (r shl 16) + (g shl 8) + b
+                pixelBuffer[y][x] = (r shl 16) + (g shl 8) + b
             }
         }
 

@@ -82,6 +82,16 @@ class MainContent : Fragment() {
         var audioBufLen = 0
 
         thread {
+            while (true) {
+                if (!running) {
+                    Thread.sleep(100)
+                    continue
+                }
+                binding.screen.drawScreen()
+            }
+        }
+
+        thread {
             println("##### Starting emulation...")
             while (true) {
                 if (emulator.numberOfSamplesInAudioBuffer > 6000) continue;
@@ -92,7 +102,7 @@ class MainContent : Fragment() {
                 val response = emulator.executeFrame()
                 if (response > -1) {
                     binding.screen.getPixelsFromEmulator(emulator)
-                    binding.screen.drawScreen()
+                    // thread { binding.screen.drawScreen() }
 
                     audioBufLen = emulator.numberOfSamplesInAudioBuffer * 2
                     val audioArray = ByteArray(audioBufLen)
