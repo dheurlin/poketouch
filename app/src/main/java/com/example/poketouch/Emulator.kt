@@ -16,9 +16,11 @@ class Emulator {
 
     private lateinit var audio: AudioTrack
     private val screen: ScreenView
+    private val controller: ControllerView
 
-    constructor(rom: InputStream, screenView: ScreenView) {
+    constructor(rom: InputStream, screenView: ScreenView, controllerView: ControllerView) {
         screen = screenView
+        controller = controllerView
         loadRom(rom)
         configure()
         initAudio()
@@ -37,7 +39,7 @@ class Emulator {
             0, // enableBootRom
             1, // preferGbc
             1, // audioBatchProcessing
-            1, // graphicsBatchProcessing
+            0, // graphicsBatchProcessing
             1, // timersBatchProcessing
             0, // graphicsDisableScanlineRendering
             1, // audioAccumulateSample
@@ -71,6 +73,20 @@ class Emulator {
         wasmBoy.clearAudioBuffer()
     }
 
+    private fun setJoypadInput() {
+        wasmBoy.setJoypadState(
+            if (controller.direction == ControllerView.DPadDirection.UP)    1 else 0,
+            if (controller.direction == ControllerView.DPadDirection.RIGHT) 1 else 0,
+            if (controller.direction == ControllerView.DPadDirection.DOWN)  1 else 0,
+            if (controller.direction == ControllerView.DPadDirection.LEFT)  1 else 0,
+
+            if (controller.aButton) 1 else 0,
+            0, // B
+            0, // SELECT
+            if(controller.startButton) 1 else 0,
+        )
+    }
+
     fun start() {
         running = true
 
@@ -96,10 +112,12 @@ class Emulator {
                 if (response > -1) {
                     screen.getPixelsFromEmulator(wasmBoy)
                     playAudio()
+                    setJoypadInput()
                 } else {
-                    println("##### Bruh the response weren't above 0... $response")
+                    println("##### Bruh moment... $response")
                 }
-                // TODD more accurate timing
+
+                // Sleep a bit depending on how full the audio buffer is
                 val audioBufFill =  audioBufLen.toFloat() / AUDIO_BUF_TARGET_SIZE.toFloat()
                 Thread.sleep(((1000 / 60) * audioBufFill).toLong())
             }

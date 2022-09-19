@@ -43,7 +43,7 @@ class MainContent : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        emulator = Emulator(resources.openRawResource(R.raw.crystal), binding.screen)
+        emulator = Emulator(resources.openRawResource(R.raw.crystal), binding.screen, binding.controller)
         emulator.start()
     }
 

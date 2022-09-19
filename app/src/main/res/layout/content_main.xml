@@ -18,4 +18,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <com.example.poketouch.ControllerView
+        android:id="@+id/controller"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/screen" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
