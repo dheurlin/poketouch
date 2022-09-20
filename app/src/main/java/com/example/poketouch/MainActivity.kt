@@ -11,6 +11,8 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
+import androidx.core.view.get
+import androidx.fragment.app.findFragment
 import com.example.poketouch.databinding.ActivityMainBinding
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
@@ -22,6 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    private lateinit var mainContent: MainContent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +34,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar)
-
 
         // test.executeFrame()
     }
@@ -46,8 +48,16 @@ class MainActivity : AppCompatActivity() {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+        fun mc(): MainContent? {
+            val frag = supportFragmentManager.findFragmentById(R.id.main_content);
+            if (frag is MainContent) {
+                return frag
+            }
+            return null
+        }
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_save_state -> { mc()?.emulator?.saveState(applicationContext); true }
+            R.id.action_load_state -> { mc()?.emulator?.loadState(applicationContext); true }
             else -> super.onOptionsItemSelected(item)
         }
     }

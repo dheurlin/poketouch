@@ -1,26 +1,28 @@
 package com.example.poketouch
 
 import WasmBoy
+import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.InputStream
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
-class Emulator {
-    private val wasmBoy: WasmBoy = WasmBoy(ByteBuffer.allocate(10_000_000), null)
+class Emulator(rom: InputStream, screenView: ScreenView, controllerView: ControllerView) {
+    private val wasmBoy: WasmBoy = WasmBoy(ByteBuffer.allocate(20_000_000), null)
     private val AUDIO_BUF_TARGET_SIZE = 2 * 4096
     private var audioBufLen = 0
     var running = false
 
     private lateinit var audio: AudioTrack
-    private val screen: ScreenView
-    private val controller: ControllerView
+    private val screen: ScreenView = screenView
+    private val controller: ControllerView = controllerView
 
-    constructor(rom: InputStream, screenView: ScreenView, controllerView: ControllerView) {
-        screen = screenView
-        controller = controllerView
+    init {
         loadRom(rom)
         configure()
         initAudio()
@@ -85,6 +87,71 @@ class Emulator {
             0, // SELECT
             if(controller.startButton) 1 else 0,
         )
+    }
+
+    // TODO Saving and loading: acquire lock of memory?
+    public fun saveState(context: Context) {
+        wasmBoy.saveState()
+
+        val wasmState = ByteArray(wasmBoy.wasmboY_STATE_SIZE)
+        wasmBoy.memory.position(wasmBoy.wasmboY_STATE_LOCATION)
+        wasmBoy.memory.get(wasmState)
+
+        val gbInternalMemory = ByteArray(wasmBoy.gameboY_INTERNAL_MEMORY_SIZE)
+        wasmBoy.memory.position(wasmBoy.gameboY_INTERNAL_MEMORY_LOCATION)
+        wasmBoy.memory.get(gbInternalMemory)
+
+        val cartridgeRam = ByteArray(wasmBoy.cartridgE_RAM_SIZE)
+        wasmBoy.memory.position(wasmBoy.cartridgE_RAM_LOCATION)
+        wasmBoy.memory.get(cartridgeRam)
+
+        val gbcPalette = ByteArray(wasmBoy.gbC_PALETTE_SIZE)
+        wasmBoy.memory.position(wasmBoy.gbC_PALETTE_LOCATION)
+        wasmBoy.memory.get(gbcPalette)
+
+        val file = File(context.filesDir, "state")
+        if (file.isFile) {
+            // TODO Support inf states?
+            println("Deleting existing saveState...")
+            file.delete()
+        }
+        FileOutputStream(file).use {
+            it.write(wasmState)
+            it.write(gbInternalMemory)
+            it.write(cartridgeRam)
+            it.write(gbcPalette)
+        }
+        // throw NotImplementedError("saveState not implemented")
+    }
+
+    public fun loadState(context: Context) {
+        val file = File(context.filesDir, "state")
+        if (!file.isFile) {
+            println("Save state not created...")
+            return
+        }
+        val wasmState = ByteArray(wasmBoy.wasmboY_STATE_SIZE)
+        val gbInternalMemory = ByteArray(wasmBoy.gameboY_INTERNAL_MEMORY_SIZE)
+        val cartridgeRam = ByteArray(wasmBoy.cartridgE_RAM_SIZE)
+        val gbcPalette = ByteArray(wasmBoy.gbC_PALETTE_SIZE)
+
+        FileInputStream(file).use {
+            it.read(wasmState)
+            it.read(gbInternalMemory)
+            it.read(cartridgeRam)
+            it.read(gbcPalette)
+        }
+
+        wasmBoy.memory.position(wasmBoy.wasmboY_STATE_LOCATION)
+        wasmBoy.memory.put(wasmState)
+        wasmBoy.memory.position(wasmBoy.gameboY_INTERNAL_MEMORY_LOCATION)
+        wasmBoy.memory.put(gbInternalMemory)
+        wasmBoy.memory.position(wasmBoy.cartridgE_RAM_LOCATION)
+        wasmBoy.memory.put(cartridgeRam)
+        wasmBoy.memory.position(wasmBoy.gbC_PALETTE_LOCATION)
+        wasmBoy.memory.put(gbcPalette)
+
+        wasmBoy.loadState()
     }
 
     fun start() {

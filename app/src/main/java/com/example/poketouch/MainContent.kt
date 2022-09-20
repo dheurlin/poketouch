@@ -9,17 +9,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.example.poketouch.databinding.ContentMainBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import java.nio.ByteBuffer
-import kotlin.concurrent.thread
-
 
 class MainContent : Fragment() {
     private var _binding: ContentMainBinding? = null
     private var running = true
-    private lateinit var emulator: Emulator
+    public lateinit var emulator: Emulator
 
     private val binding get() = _binding!!
 
@@ -45,6 +41,7 @@ class MainContent : Fragment() {
 
         emulator = Emulator(resources.openRawResource(R.raw.crystal), binding.screen, binding.controller)
         emulator.start()
+
     }
 
     override fun onPause() {
