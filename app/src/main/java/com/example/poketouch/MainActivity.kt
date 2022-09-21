@@ -56,8 +56,8 @@ class MainActivity : AppCompatActivity() {
             return null
         }
         return when (item.itemId) {
-            R.id.action_save_state -> { mc()?.emulator?.saveState(applicationContext); true }
-            R.id.action_load_state -> { mc()?.emulator?.loadState(applicationContext); true }
+            R.id.action_save_state -> { mc()?.emulator?.saveState(); true }
+            R.id.action_load_state -> { mc()?.emulator?.loadState(); true }
             else -> super.onOptionsItemSelected(item)
         }
     }

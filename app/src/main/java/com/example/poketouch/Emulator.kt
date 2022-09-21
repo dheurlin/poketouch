@@ -12,11 +12,15 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
-class Emulator(rom: InputStream, screenView: ScreenView, controllerView: ControllerView) {
-    private val wasmBoy: WasmBoy = WasmBoy(ByteBuffer.allocate(20_000_000), null)
+class Emulator(rom: InputStream, screenView: ScreenView, controllerView: ControllerView, context: Context) {
+    private val wasmBoy: WasmBoy = WasmBoy(ByteBuffer.allocate(10_000_000), null)
     private val AUDIO_BUF_TARGET_SIZE = 2 * 4096
     private var audioBufLen = 0
+    private val context: Context = context
+
     var running = false
+    var shouldLoadState = false
+    var shouldSaveState = false
 
     private lateinit var audio: AudioTrack
     private val screen: ScreenView = screenView
@@ -89,8 +93,16 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
         )
     }
 
-    // TODO Saving and loading: acquire lock of memory?
-    public fun saveState(context: Context) {
+
+    public fun loadState() {
+        shouldLoadState = true
+    }
+
+    public fun saveState() {
+        shouldSaveState = true
+    }
+
+    private fun _saveState() {
         wasmBoy.saveState()
 
         val wasmState = ByteArray(wasmBoy.wasmboY_STATE_SIZE)
@@ -121,10 +133,12 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
             it.write(cartridgeRam)
             it.write(gbcPalette)
         }
-        // throw NotImplementedError("saveState not implemented")
+
+        shouldSaveState = false
     }
 
-    public fun loadState(context: Context) {
+
+    private fun _loadState() {
         val file = File(context.filesDir, "state")
         if (!file.isFile) {
             println("Save state not created...")
@@ -152,6 +166,8 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
         wasmBoy.memory.put(gbcPalette)
 
         wasmBoy.loadState()
+
+        shouldLoadState = false
     }
 
     fun start() {
@@ -167,6 +183,10 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
             }
         }
 
+        wasmBoy.setProgramCounterBreakpoint(0x74c1)
+        controller.text = "Not in battle"
+        // wasmBoy.setProgramCounterBreakpoint(0x566)
+
         thread {
             println("##### Starting emulation...")
             while (true) {
@@ -175,6 +195,21 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
                     Thread.sleep(100)
                     continue
                 }
+
+                if (shouldLoadState) _loadState()
+                if (shouldSaveState) _saveState()
+
+                val pc = wasmBoy.programCounter
+                if (pc == 0x74c1) {
+                    controller.text = "In battle"
+                    wasmBoy.setProgramCounterBreakpoint(0x769e)
+                }
+                if (pc == 0x769e) {
+                    controller.text = "Left battle"
+                    wasmBoy.setProgramCounterBreakpoint(0x74c1)
+                }
+
+
                 val response = wasmBoy.executeFrame()
                 if (response > -1) {
                     screen.getPixelsFromEmulator(wasmBoy)

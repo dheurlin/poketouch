@@ -1,6 +1,9 @@
 package com.example.poketouch
 
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -25,6 +28,12 @@ class ControllerView @JvmOverloads constructor(
     var startButton = false
         private set
 
+    public var text: String? = null
+        set(value) {
+            field = value
+            invalidate()
+        }
+
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         // return super.onTouchEvent(event)
 
@@ -37,7 +46,7 @@ class ControllerView @JvmOverloads constructor(
                     startButton = true
                     return true
                 }
-                if (xCentered!!.absoluteValue > 100 || yCentered!!.absoluteValue > 100) {
+                if (xCentered.absoluteValue > 100 || yCentered!!.absoluteValue > 100) {
                     setDPadFromCoordinates(xCentered, yCentered!!)
                     return true
                 }
@@ -61,14 +70,14 @@ class ControllerView @JvmOverloads constructor(
 
     private fun setDPadFromCoordinates(x: Float, y: Float) {
         val θ = atan(y / x)
-        if (y > 0 && θ.absoluteValue > PI / 4) {
-            direction = DPadDirection.DOWN
+        direction = if (y > 0 && θ.absoluteValue > PI / 4) {
+            DPadDirection.DOWN
         } else if (y <= 0 && θ.absoluteValue >= PI / 4) {
-            direction = DPadDirection.UP
+            DPadDirection.UP
         } else if (x > 0 && θ.absoluteValue < PI / 4) {
-            direction = DPadDirection.RIGHT
+            DPadDirection.RIGHT
         } else {
-            direction = DPadDirection.LEFT
+            DPadDirection.LEFT
         }
     }
 
@@ -76,5 +85,17 @@ class ControllerView @JvmOverloads constructor(
         direction = null
         aButton = false
         startButton = false
+    }
+
+    public override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        if (this.text == null) return
+
+        var paint = Paint()
+        paint.setColor(Color.WHITE)
+        paint.textSize = 150f
+        canvas?.drawText(text ?: "", 50f, 150f, paint)
+
+
     }
 }
