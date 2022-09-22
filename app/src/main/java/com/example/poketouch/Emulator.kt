@@ -9,11 +9,14 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.lang.invoke.MethodHandle
+import java.lang.invoke.MethodHandles
+import java.lang.invoke.MethodType
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
 class Emulator(rom: InputStream, screenView: ScreenView, controllerView: ControllerView, context: Context) {
-    private val wasmBoy: WasmBoy = WasmBoy(ByteBuffer.allocate(10_000_000), null)
+    private val wasmBoy: WasmBoy = WasmBoy(ByteBuffer.allocate(20_000_000), null)
     private val AUDIO_BUF_TARGET_SIZE = 2 * 4096
     private var audioBufLen = 0
     private val context: Context = context
@@ -183,9 +186,9 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
             }
         }
 
-        wasmBoy.setProgramCounterBreakpoint(0x74c1)
+        wasmBoy.setProgramCounterBreakpoint0(0x74c1)
+        wasmBoy.setProgramCounterBreakpoint1(0x769e)
         controller.text = "Not in battle"
-        // wasmBoy.setProgramCounterBreakpoint(0x566)
 
         thread {
             println("##### Starting emulation...")
@@ -200,15 +203,13 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
                 if (shouldSaveState) _saveState()
 
                 val pc = wasmBoy.programCounter
+                println("current pc=$pc")
                 if (pc == 0x74c1) {
-                    controller.text = "In battle"
-                    wasmBoy.setProgramCounterBreakpoint(0x769e)
+                    controller.text = "in battle"
                 }
                 if (pc == 0x769e) {
-                    controller.text = "Left battle"
-                    wasmBoy.setProgramCounterBreakpoint(0x74c1)
+                    controller.text = "left battle"
                 }
-
 
                 val response = wasmBoy.executeFrame()
                 if (response > -1) {
@@ -221,7 +222,7 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
 
                 // Sleep a bit depending on how full the audio buffer is
                 val audioBufFill =  audioBufLen.toFloat() / AUDIO_BUF_TARGET_SIZE.toFloat()
-                Thread.sleep(((1000 / 60) * audioBufFill).toLong())
+//                Thread.sleep(((1000 / 60) * audioBufFill).toLong())
             }
         }
     }

@@ -43,7 +43,7 @@ class MainContent : Fragment() {
         if (cxt != null)  {
             emulator = Emulator(resources.openRawResource(R.raw.pokecrystal), binding.screen, binding.controller, cxt)
             emulator.start()
-            emulator.loadState()
+            // emulator.loadState()
         }
 
     }
