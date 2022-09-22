@@ -1,17 +1,16 @@
-package com.example.poketouch
+package com.example.poketouch.emulator
 
 import WasmBoy
 import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
+import com.example.poketouch.ControllerView
+import com.example.poketouch.ScreenView
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.lang.invoke.MethodHandle
-import java.lang.invoke.MethodHandles
-import java.lang.invoke.MethodType
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
@@ -28,6 +27,8 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
     private lateinit var audio: AudioTrack
     private val screen: ScreenView = screenView
     private val controller: ControllerView = controllerView
+
+    private val breakMan: BreakpointManager = BreakpointManager(wasmBoy)
 
     init {
         loadRom(rom)
@@ -186,8 +187,9 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
             }
         }
 
-        wasmBoy.setProgramCounterBreakpoint0(0x74c1)
-        wasmBoy.setProgramCounterBreakpoint1(0x769e)
+        breakMan.setPCBreakPoint(Offsets.StartBattle)
+        breakMan.setPCBreakPoint(Offsets.ExitBattle)
+
         controller.text = "Not in battle"
 
         thread {
@@ -203,7 +205,6 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
                 if (shouldSaveState) _saveState()
 
                 val pc = wasmBoy.programCounter
-                println("current pc=$pc")
                 if (pc == 0x74c1) {
                     controller.text = "in battle"
                 }

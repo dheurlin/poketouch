@@ -1,16 +1,12 @@
 package com.example.poketouch
 
-import WasmBoy
-import android.media.AudioFormat
-import android.media.AudioManager
-import android.media.AudioTrack
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
 import com.example.poketouch.databinding.ContentMainBinding
+import com.example.poketouch.emulator.Emulator
 
 class MainContent : Fragment() {
     private var _binding: ContentMainBinding? = null
