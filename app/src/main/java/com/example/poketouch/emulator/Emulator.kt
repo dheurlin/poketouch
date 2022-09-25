@@ -23,6 +23,7 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
     var running = false
     var shouldLoadState = false
     var shouldSaveState = false
+    public var backPressed = false
 
     private lateinit var audio: AudioTrack
     private val screen: ScreenView = screenView
@@ -84,6 +85,12 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
     }
 
     private fun setJoypadInput() {
+        val b = if (backPressed) {
+           backPressed = false
+           1
+        } else {
+            0
+        }
         wasmBoy.setJoypadState(
             if (controller.direction == ControllerView.DPadDirection.UP)    1 else 0,
             if (controller.direction == ControllerView.DPadDirection.RIGHT) 1 else 0,
@@ -91,7 +98,7 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
             if (controller.direction == ControllerView.DPadDirection.LEFT)  1 else 0,
 
             if (controller.aButton) 1 else 0,
-            0, // B
+            b, // B
             0, // SELECT
             if(controller.startButton) 1 else 0,
         )
@@ -190,8 +197,7 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
         breakMan.setPCBreakPoint(Offsets.StartBattle)
         breakMan.setPCBreakPoint(Offsets.ExitBattle)
         breakMan.setPCBreakPoint(Offsets.LoadBattleMenu)
-        breakMan.setPCBreakPoint(Offsets.MoveSelectionScreen_battle_player_moves)
-        breakMan.setPCBreakPoint(Offsets.ListMoves_moves_loop)
+        breakMan.setPCBreakPoint(Offsets.ListMoves_after_read_name)
 
         controller.text = "Not in battle"
 
@@ -214,12 +220,10 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
                 if (pc == Offsets.ExitBattle) {
                     controller.text = "left battle"
                 }
-                if (pc == Offsets.MoveSelectionScreen_battle_player_moves) {
-                    println("####### Selecting a move")
-                    controller.text = "Selecting a move..."
+                if (pc == Offsets.ListMoves_after_read_name && getRomBank() == Offsets.RomBankBattle) {
+                    println(getString(Offsets.wStringBuffer1))
                 }
 
-                println(getString(Offsets.wStringBuffer1))
 
                 val response = wasmBoy.executeFrame()
                 if (response > -1) {
@@ -246,8 +250,13 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
     }
 
     private fun getString(gameOffset: Int): String {
-        var bytes = getBytes(gameOffset, 20)
-        var ogString = Charmap.bytesToString(bytes)
+        val bytes = getBytes(gameOffset, 20)
+        val ogString = Charmap.bytesToString(bytes)
         return ogString.split("@")[0]
+    }
+
+    private fun getRomBank(): Int {
+        val offset = wasmBoy.getWasmBoyOffsetFromGameBoyOffset(Offsets.hROMBank)
+        return wasmBoy.memory.get(offset).toInt()
     }
 }

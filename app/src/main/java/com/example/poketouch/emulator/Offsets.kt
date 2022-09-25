@@ -10,6 +10,7 @@ object Offsets {
     const val MoveSelectionScreen_use_move = 0x65d9
     const val MoveSelectionScreen_battle_player_moves = 0x658e
     const val ListMoves_moves_loop = 0x4d74
+    const val ListMoves_after_read_name = 0x4d87
 
 //    $4d74 = ListMoves.moves_loop
 //    $4da7 = ListMoves.no_more_moves
@@ -20,4 +21,8 @@ object Offsets {
     const val wMenuData_2DMenuItemStringsBank = 0xcf94
     const val wMenuData_2DMenuItemStringsAddr = 0xcf95
     const val wStringBuffer1 = 0xd073
+    const val hROMBank = 0xff9d
+
+    // ROM banks
+    const val RomBankBattle = 0x14
 }
