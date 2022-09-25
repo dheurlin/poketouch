@@ -1,7 +1,15 @@
 package com.example.poketouch.emulator
 
 import WasmBoy
-class StateManager(private val wasmBoy: WasmBoy, private val breakMan: BreakpointManager) {
+import android.app.Activity
+import com.example.poketouch.ControllerFragment
+
+class StateManager(
+    private val wasmBoy: WasmBoy,
+    private val breakMan: BreakpointManager,
+    private val controller: ControllerFragment,
+    private val activity: Activity,
+    ) {
     public enum class MainState {
         Battle,
         Overworld,
@@ -75,6 +83,9 @@ class StateManager(private val wasmBoy: WasmBoy, private val breakMan: Breakpoin
             MainState.Overworld -> {
 //               if (oldMainState == mainState) return
 //                println("## Overworld, setting breakpoints")
+                activity.runOnUiThread {
+                    controller.buttonAdapter.clearOptions()
+                }
                 breakMan.clearPCBreakPoints()
                 breakMan.setPCBreakPoint(Offsets.StartBattle)
             }
@@ -97,10 +108,27 @@ class StateManager(private val wasmBoy: WasmBoy, private val breakMan: Breakpoin
         when (subState) {
             SubState.BattleWaiting -> {
 //               println("just waiting...")
+                activity.runOnUiThread {
+                    controller.buttonAdapter.clearOptions()
+                }
+            }
+            SubState.BattleChoosingAction -> {
+//               println("just waiting...")
+                activity.runOnUiThread {
+                    controller.buttonAdapter.clearOptions()
+                }
             }
             SubState.BattleChoosingMove -> {
                 val moveName = getString(Offsets.wStringBuffer1)
-                println("## Move ${subSubState + 1}: $moveName")
+
+                activity.runOnUiThread {
+                    if (subSubState === 0) {
+                        controller.buttonAdapter.clearOptions()
+                    }
+                    controller.buttonAdapter.addOption(moveName)
+                    println("## Move ${subSubState + 1}: $moveName")
+                }
+
             }
         }
     }

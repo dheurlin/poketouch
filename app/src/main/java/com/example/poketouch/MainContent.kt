@@ -37,11 +37,10 @@ class MainContent : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val cxt = activity?.applicationContext
-        if (cxt != null)  {
+        val act = activity
+        if (act != null)  {
             val controller = childFragmentManager.findFragmentById(R.id.controller) as ControllerFragment
-//            val controller = view.findFragment<ControllerFragment>()
-            emulator = Emulator(resources.openRawResource(R.raw.pokecrystal), binding.screen, controller, cxt)
+            emulator = Emulator(resources.openRawResource(R.raw.pokecrystal), binding.screen, controller, act)
             emulator.start()
             emulator.loadState()
         }

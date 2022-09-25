@@ -36,4 +36,14 @@ class ControllerButtonsAdapter(
     override fun getItemCount(): Int {
         return options.size
     }
+
+    public fun clearOptions() {
+        options.clear()
+        notifyDataSetChanged()
+    }
+
+    public fun addOption(option: String) {
+        options.add(option)
+        notifyItemChanged(options.size - 1)
+    }
 }

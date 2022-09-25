@@ -1,6 +1,7 @@
 package com.example.poketouch.emulator
 
 import WasmBoy
+import android.app.Activity
 import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioManager
@@ -14,11 +15,11 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
-class Emulator(rom: InputStream, screenView: ScreenView, controller: ControllerFragment, context: Context) {
+class Emulator(rom: InputStream, screenView: ScreenView, controller: ControllerFragment, activity: Activity) {
     private val wasmBoy: WasmBoy = WasmBoy(ByteBuffer.allocate(20_000_000), null)
     private val AUDIO_BUF_TARGET_SIZE = 2 * 4096
     private var audioBufLen = 0
-    private val context: Context = context
+    private val activity = activity
 
     var running = false
     var shouldLoadState = false
@@ -30,7 +31,7 @@ class Emulator(rom: InputStream, screenView: ScreenView, controller: ControllerF
     private val controller: ControllerFragment = controller
 
     private val breakMan: BreakpointManager = BreakpointManager(wasmBoy)
-    private val stateMan: StateManager = StateManager(wasmBoy, breakMan)
+    private val stateMan: StateManager = StateManager(wasmBoy, breakMan, controller, activity)
 
     init {
         loadRom(rom)
@@ -133,7 +134,7 @@ class Emulator(rom: InputStream, screenView: ScreenView, controller: ControllerF
         wasmBoy.memory.position(wasmBoy.gbC_PALETTE_LOCATION)
         wasmBoy.memory.get(gbcPalette)
 
-        val file = File(context.filesDir, "state")
+        val file = File(activity.applicationContext.filesDir, "state")
         if (file.isFile) {
             // TODO Support inf states?
             println("Deleting existing saveState...")
@@ -151,7 +152,7 @@ class Emulator(rom: InputStream, screenView: ScreenView, controller: ControllerF
 
 
     private fun _loadState() {
-        val file = File(context.filesDir, "state")
+        val file = File(activity.applicationContext.filesDir, "state")
         if (!file.isFile) {
             println("Save state not created...")
             return

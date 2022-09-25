@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.poketouch.databinding.FragmentControllerBinding
 import kotlin.math.PI
@@ -20,7 +21,7 @@ class ControllerFragment : Fragment() {
     }
 
     private lateinit var binding: FragmentControllerBinding
-    private lateinit var buttonAdapter: ControllerButtonsAdapter
+    public lateinit var buttonAdapter: ControllerButtonsAdapter
 
 
     public enum class DPadDirection {
@@ -47,6 +48,7 @@ class ControllerFragment : Fragment() {
 
         buttonAdapter = ControllerButtonsAdapter(mutableListOf())
         binding.buttons.adapter = buttonAdapter
+        binding.buttons.layoutManager = LinearLayoutManager(this.context)
 
         return root
     }
