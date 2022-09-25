@@ -189,6 +189,9 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
 
         breakMan.setPCBreakPoint(Offsets.StartBattle)
         breakMan.setPCBreakPoint(Offsets.ExitBattle)
+        breakMan.setPCBreakPoint(Offsets.LoadBattleMenu)
+        breakMan.setPCBreakPoint(Offsets.MoveSelectionScreen_battle_player_moves)
+        breakMan.setPCBreakPoint(Offsets.ListMoves_moves_loop)
 
         controller.text = "Not in battle"
 
@@ -205,12 +208,18 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
                 if (shouldSaveState) _saveState()
 
                 val pc = wasmBoy.programCounter
-                if (pc == 0x74c1) {
+                if (pc == Offsets.StartBattle) {
                     controller.text = "in battle"
                 }
-                if (pc == 0x769e) {
+                if (pc == Offsets.ExitBattle) {
                     controller.text = "left battle"
                 }
+                if (pc == Offsets.MoveSelectionScreen_battle_player_moves) {
+                    println("####### Selecting a move")
+                    controller.text = "Selecting a move..."
+                }
+
+                println(getString(Offsets.wStringBuffer1))
 
                 val response = wasmBoy.executeFrame()
                 if (response > -1) {
@@ -223,8 +232,22 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
 
                 // Sleep a bit depending on how full the audio buffer is
                 val audioBufFill =  audioBufLen.toFloat() / AUDIO_BUF_TARGET_SIZE.toFloat()
-//                Thread.sleep(((1000 / 60) * audioBufFill).toLong())
+                Thread.sleep(((1000 / 60) * audioBufFill).toLong())
             }
         }
+    }
+
+    private fun getBytes(gameOffset: Int, numBytes: Int): ByteArray {
+        val bytes = ByteArray(numBytes)
+        val offset = wasmBoy.getWasmBoyOffsetFromGameBoyOffset(gameOffset)
+        wasmBoy.memory.position(offset)
+        wasmBoy.memory.get(bytes)
+        return bytes
+    }
+
+    private fun getString(gameOffset: Int): String {
+        var bytes = getBytes(gameOffset, 20)
+        var ogString = Charmap.bytesToString(bytes)
+        return ogString.split("@")[0]
     }
 }
