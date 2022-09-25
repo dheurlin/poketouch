@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.get
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.findFragment
 import com.example.poketouch.databinding.ContentMainBinding
 import com.example.poketouch.emulator.Emulator
 
@@ -37,7 +39,9 @@ class MainContent : Fragment() {
 
         val cxt = activity?.applicationContext
         if (cxt != null)  {
-            emulator = Emulator(resources.openRawResource(R.raw.pokecrystal), binding.screen, binding.controller, cxt)
+            val controller = childFragmentManager.findFragmentById(R.id.controller) as ControllerFragment
+//            val controller = view.findFragment<ControllerFragment>()
+            emulator = Emulator(resources.openRawResource(R.raw.pokecrystal), binding.screen, controller, cxt)
             emulator.start()
             emulator.loadState()
         }

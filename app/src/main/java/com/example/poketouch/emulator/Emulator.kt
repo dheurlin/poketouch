@@ -5,7 +5,7 @@ import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
-import com.example.poketouch.ControllerView
+import com.example.poketouch.ControllerFragment
 import com.example.poketouch.ScreenView
 import java.io.File
 import java.io.FileInputStream
@@ -14,7 +14,7 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
-class Emulator(rom: InputStream, screenView: ScreenView, controllerView: ControllerView, context: Context) {
+class Emulator(rom: InputStream, screenView: ScreenView, controller: ControllerFragment, context: Context) {
     private val wasmBoy: WasmBoy = WasmBoy(ByteBuffer.allocate(20_000_000), null)
     private val AUDIO_BUF_TARGET_SIZE = 2 * 4096
     private var audioBufLen = 0
@@ -27,9 +27,10 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
 
     private lateinit var audio: AudioTrack
     private val screen: ScreenView = screenView
-    private val controller: ControllerView = controllerView
+    private val controller: ControllerFragment = controller
 
     private val breakMan: BreakpointManager = BreakpointManager(wasmBoy)
+    private val stateMan: StateManager = StateManager(wasmBoy, breakMan)
 
     init {
         loadRom(rom)
@@ -92,10 +93,10 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
             0
         }
         wasmBoy.setJoypadState(
-            if (controller.direction == ControllerView.DPadDirection.UP)    1 else 0,
-            if (controller.direction == ControllerView.DPadDirection.RIGHT) 1 else 0,
-            if (controller.direction == ControllerView.DPadDirection.DOWN)  1 else 0,
-            if (controller.direction == ControllerView.DPadDirection.LEFT)  1 else 0,
+            if (controller.direction == ControllerFragment.DPadDirection.UP)    1 else 0,
+            if (controller.direction == ControllerFragment.DPadDirection.RIGHT) 1 else 0,
+            if (controller.direction == ControllerFragment.DPadDirection.DOWN)  1 else 0,
+            if (controller.direction == ControllerFragment.DPadDirection.LEFT)  1 else 0,
 
             if (controller.aButton) 1 else 0,
             b, // B
@@ -194,13 +195,6 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
             }
         }
 
-        breakMan.setPCBreakPoint(Offsets.StartBattle)
-        breakMan.setPCBreakPoint(Offsets.ExitBattle)
-        breakMan.setPCBreakPoint(Offsets.LoadBattleMenu)
-        breakMan.setPCBreakPoint(Offsets.ListMoves_after_read_name)
-
-        controller.text = "Not in battle"
-
         thread {
             println("##### Starting emulation...")
             while (true) {
@@ -213,19 +207,12 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
                 if (shouldLoadState) _loadState()
                 if (shouldSaveState) _saveState()
 
-                val pc = wasmBoy.programCounter
-                if (pc == Offsets.StartBattle) {
-                    controller.text = "in battle"
-                }
-                if (pc == Offsets.ExitBattle) {
-                    controller.text = "left battle"
-                }
-                if (pc == Offsets.ListMoves_after_read_name && getRomBank() == Offsets.RomBankBattle) {
-                    println(getString(Offsets.wStringBuffer1))
-                }
-
-
                 val response = wasmBoy.executeFrame()
+
+                // We hit a breakpoint
+                if (response == 2) {
+                    stateMan.act()
+                }
                 if (response > -1) {
                     screen.getPixelsFromEmulator(wasmBoy)
                     playAudio()
@@ -239,24 +226,5 @@ class Emulator(rom: InputStream, screenView: ScreenView, controllerView: Control
                 Thread.sleep(((1000 / 60) * audioBufFill).toLong())
             }
         }
-    }
-
-    private fun getBytes(gameOffset: Int, numBytes: Int): ByteArray {
-        val bytes = ByteArray(numBytes)
-        val offset = wasmBoy.getWasmBoyOffsetFromGameBoyOffset(gameOffset)
-        wasmBoy.memory.position(offset)
-        wasmBoy.memory.get(bytes)
-        return bytes
-    }
-
-    private fun getString(gameOffset: Int): String {
-        val bytes = getBytes(gameOffset, 20)
-        val ogString = Charmap.bytesToString(bytes)
-        return ogString.split("@")[0]
-    }
-
-    private fun getRomBank(): Int {
-        val offset = wasmBoy.getWasmBoyOffsetFromGameBoyOffset(Offsets.hROMBank)
-        return wasmBoy.memory.get(offset).toInt()
     }
 }

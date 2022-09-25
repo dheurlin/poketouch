@@ -24,4 +24,20 @@ class BreakpointManager(wasmBoy: WasmBoy) {
         breakpointsSet.add(addr)
         numUsed += 1
     }
+
+    public fun clearPCBreakPoints() {
+        wasmBoy.setProgramCounterBreakpoint0(-1)
+        wasmBoy.setProgramCounterBreakpoint1(-1)
+        wasmBoy.setProgramCounterBreakpoint2(-1)
+        wasmBoy.setProgramCounterBreakpoint3(-1)
+        wasmBoy.setProgramCounterBreakpoint4(-1)
+        wasmBoy.setProgramCounterBreakpoint5(-1)
+        wasmBoy.setProgramCounterBreakpoint6(-1)
+        wasmBoy.setProgramCounterBreakpoint7(-1)
+        wasmBoy.setProgramCounterBreakpoint8(-1)
+        wasmBoy.setProgramCounterBreakpoint9(-1)
+
+        breakpointsSet.clear()
+        numUsed = 0
+    }
 }
