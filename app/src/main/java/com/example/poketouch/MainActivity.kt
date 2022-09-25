@@ -44,6 +44,19 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onBackPressed() {
+//        super.onBackPressed()
+        fun mc(): MainContent? {
+            val frag = supportFragmentManager.findFragmentById(R.id.main_content);
+            if (frag is MainContent) {
+                return frag
+            }
+            return null
+        }
+
+        mc()?.emulator?.backPressed = true
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
