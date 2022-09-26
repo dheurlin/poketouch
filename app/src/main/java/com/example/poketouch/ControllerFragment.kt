@@ -31,7 +31,6 @@ class ControllerFragment : Fragment() {
     var direction: DPadDirection? = null
         private set
     var aButton = false
-        private set
     var startButton = false
         private set
 
@@ -114,7 +113,7 @@ class ControllerFragment : Fragment() {
     }
 
 
-    private fun releaseButtons() {
+    fun releaseButtons() {
         direction = null
         aButton = false
         startButton = false

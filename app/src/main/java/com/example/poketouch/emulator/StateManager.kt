@@ -18,11 +18,12 @@ class StateManager(
         BattleWaiting,
         BattleChoosingAction,
         BattleChoosingMove,
+        BattleUsingMove,
     }
 
     private var mainState: MainState = MainState.Overworld
     private var subState: SubState? = null
-    private var subSubState = -1
+    private var subSubState: Int? = null
 
     init {
         breakMan.clearPCBreakPoints()
@@ -41,22 +42,33 @@ class StateManager(
             pc == Offsets.StartBattle -> {
                 mainState = MainState.Battle
                 subState = SubState.BattleWaiting
-                subSubState = -1
+                subSubState = null
            }
             pc == Offsets.ExitBattle -> {
                 mainState = MainState.Overworld
                 subState = null
-                subSubState = -1
+                subSubState = null
             }
             pc == Offsets.LoadBattleMenu -> {
                 mainState = MainState.Battle
                 subState = SubState.BattleChoosingAction
-                subSubState = -1
+                subSubState = null
             }
             pc == Offsets.ListMoves && bank == Offsets.RomBankBattle -> {
                 mainState = MainState.Battle
                 subState = SubState.BattleChoosingMove
+                subSubState = null
             }
+            pc == Offsets.MoveSelectionScreen_use_move -> {
+                mainState = MainState.Battle
+                subState = SubState.BattleUsingMove
+                // subSubState has been set by buttonPress
+            }
+//            subState == SubState.BattleUsingMove -> {
+//                mainState = MainState.Battle
+//                subState = SubState.BattleWaiting
+//                subSubState = null
+//            }
             else -> {
 //                mainState = MainState.Overworld
 //                subState = null
@@ -85,6 +97,7 @@ class StateManager(
                 breakMan.setPCBreakPoint(Offsets.ExitBattle)
                 breakMan.setPCBreakPoint(Offsets.LoadBattleMenu)
                 breakMan.setPCBreakPoint(Offsets.ListMoves)
+                breakMan.setPCBreakPoint(Offsets.MoveSelectionScreen_use_move)
                 handleBattle()
             }
             else -> {
@@ -102,19 +115,30 @@ class StateManager(
                 }
             }
             SubState.BattleChoosingAction -> {
-//               println("just waiting...")
                 activity.runOnUiThread {
                     controller.buttonAdapter.clearOptions()
                 }
             }
+            // BUG: App crashes when pressing back here!
             SubState.BattleChoosingMove -> {
                 val moveNums = getBytes(Offsets.wListMoves_MoveIndicesBuffer, 4)
                 val moveNames = getMoveNames(moveNums)
                 activity.runOnUiThread {
                     controller.buttonAdapter.clearOptions()
-                    for (s in moveNames) controller.buttonAdapter.addOption(s)
+                    controller.releaseButtons()
+                    for (s in moveNames) {
+                        controller.buttonAdapter.addOption(s) {
+                            subSubState = it
+                            controller.aButton = true
+                        }
+                    }
                 }
-
+            }
+            SubState.BattleUsingMove -> {
+                wasmBoy.memory.put(
+                    wasmBoy.getWasmBoyOffsetFromGameBoyOffset(Offsets.wMenuCursorY),
+                    subSubState!!.toByte()
+                )
             }
         }
     }
@@ -155,7 +179,6 @@ class StateManager(
         )
 
         val allStrings = Charmap.bytesToString(bytes).split("@")
-        println(allStrings)
         return bs.map {
             val i = it.toInt()
             if (i > 0) allStrings[it.toInt() - 1] else null

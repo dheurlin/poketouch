@@ -7,7 +7,7 @@ import android.widget.Button
 import androidx.recyclerview.widget.RecyclerView
 
 class ControllerButtonsAdapter(
-    private val options: MutableList<String>
+    private val options: MutableList<ControllerButtonOption>
     ) : RecyclerView.Adapter<ControllerButtonsAdapter.ButtonViewHolder>() {
 
     class ButtonViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -17,6 +17,11 @@ class ControllerButtonsAdapter(
             button = view.findViewById(R.id.obButton)
         }
     }
+
+    public data class ControllerButtonOption(
+        public val text: String,
+        public val callback: (Int) -> Unit
+    )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ButtonViewHolder {
         return ButtonViewHolder(
@@ -30,7 +35,10 @@ class ControllerButtonsAdapter(
 
     override fun onBindViewHolder(holder: ButtonViewHolder, position: Int) {
         val curOption = options[position]
-        holder.button.text = curOption
+        holder.button.text = curOption.text
+        holder.button.setOnClickListener {
+            curOption.callback(position)
+        }
     }
 
     override fun getItemCount(): Int {
@@ -42,8 +50,8 @@ class ControllerButtonsAdapter(
         notifyDataSetChanged()
     }
 
-    public fun addOption(option: String) {
-        options.add(option)
+    public fun addOption(text: String, cb: (Int) -> Unit) {
+        options.add(ControllerButtonOption(text, cb))
         notifyItemChanged(options.size - 1)
     }
 }
