@@ -53,16 +53,9 @@ class StateManager(
                 subState = SubState.BattleChoosingAction
                 subSubState = -1
             }
-            pc == Offsets.ListMoves_after_read_name
-                    && bank == Offsets.RomBankBattle
-                    && subSubState < 4 -> {
+            pc == Offsets.ListMoves && bank == Offsets.RomBankBattle -> {
                 mainState = MainState.Battle
                 subState = SubState.BattleChoosingMove
-                subSubState += 1
-            }
-            subState == SubState.BattleChoosingMove && subSubState >= 4 -> {
-                subState = SubState.BattleWaiting
-                subSubState = -1
             }
             else -> {
 //                mainState = MainState.Overworld
@@ -81,8 +74,6 @@ class StateManager(
 
         when (mainState) {
             MainState.Overworld -> {
-//               if (oldMainState == mainState) return
-//                println("## Overworld, setting breakpoints")
                 activity.runOnUiThread {
                     controller.buttonAdapter.clearOptions()
                 }
@@ -90,12 +81,10 @@ class StateManager(
                 breakMan.setPCBreakPoint(Offsets.StartBattle)
             }
             MainState.Battle -> {
-//                if (oldMainState == mainState) return
-//                println("## Battle, setting breakpoints")
                 breakMan.clearPCBreakPoints()
                 breakMan.setPCBreakPoint(Offsets.ExitBattle)
                 breakMan.setPCBreakPoint(Offsets.LoadBattleMenu)
-                breakMan.setPCBreakPoint(Offsets.ListMoves_after_read_name)
+                breakMan.setPCBreakPoint(Offsets.ListMoves)
                 handleBattle()
             }
             else -> {
@@ -119,14 +108,11 @@ class StateManager(
                 }
             }
             SubState.BattleChoosingMove -> {
-                val moveName = getString(Offsets.wStringBuffer1)
-
+                val moveNums = getBytes(Offsets.wListMoves_MoveIndicesBuffer, 4)
+                val moveNames = getMoveNames(moveNums)
                 activity.runOnUiThread {
-                    if (subSubState === 0) {
-                        controller.buttonAdapter.clearOptions()
-                    }
-                    controller.buttonAdapter.addOption(moveName)
-                    println("## Move ${subSubState + 1}: $moveName")
+                    controller.buttonAdapter.clearOptions()
+                    for (s in moveNames) controller.buttonAdapter.addOption(s)
                 }
 
             }
@@ -151,4 +137,29 @@ class StateManager(
         val ogString = Charmap.bytesToString(bytes)
         return ogString.split("@")[0]
     }
+
+    private fun getBytesFromBank(bank: Int, gbOffset: Int, numBytes: Int): ByteArray {
+        val bytes = ByteArray(numBytes)
+        val romBankOffset =  (0x4000 * bank + (gbOffset - Offsets.WasmBoySwitchableCartridgeRomLocation));
+        val offset = romBankOffset + wasmBoy.cartridgE_ROM_LOCATION
+        wasmBoy.memory.position(offset)
+        wasmBoy.memory.get(bytes)
+        return bytes
+    }
+
+    private fun getMoveNames(bs: ByteArray): List<String> {
+        val bytes = getBytesFromBank(
+            Offsets.RomBankNames,
+            Offsets.MoveNames,
+            Offsets.MoveNameLength * Offsets.NumMoves
+        )
+
+        val allStrings = Charmap.bytesToString(bytes).split("@")
+        println(allStrings)
+        return bs.map {
+            val i = it.toInt()
+            if (i > 0) allStrings[it.toInt() - 1] else null
+        }.filterNotNull()
+    }
 }
+
