@@ -106,6 +106,7 @@ class Emulator(rom: InputStream, screenView: ScreenView, controller: ControllerF
         )
     }
 
+    // TODO Save/load sometimes crashes, something to do with multiple savestates in wasmboy ??
 
     public fun loadState() {
         shouldLoadState = true

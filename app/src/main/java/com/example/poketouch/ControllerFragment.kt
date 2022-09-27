@@ -13,6 +13,7 @@ import com.example.poketouch.databinding.FragmentControllerBinding
 import kotlin.math.PI
 import kotlin.math.absoluteValue
 import kotlin.math.atan
+import kotlin.math.atan2
 
 class ControllerFragment : Fragment() {
 
@@ -58,8 +59,8 @@ class ControllerFragment : Fragment() {
             return view.onTouchEvent(event)
         }
 
-        val xCentered = event.x.minus((view.width / 2))
-        val yCentered = event.y.minus((view.height / 2))
+        val xCentered = event.x - (view.width / 2)
+        val yCentered = event.y - (view.height / 2)
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -81,7 +82,7 @@ class ControllerFragment : Fragment() {
             }
             MotionEvent.ACTION_MOVE -> {
                 // TODO Only if we have moved a certain distance?
-                setDPadFromCoordinates(xCentered!!, yCentered!!)
+                setDPadFromCoordinates(xCentered, yCentered)
                 return true
             }
         }
@@ -91,15 +92,12 @@ class ControllerFragment : Fragment() {
 
 
     private fun setDPadFromCoordinates(x: Float, y: Float) {
-        val θ = atan(y / x)
-        direction = if (y > 0 && θ.absoluteValue > PI / 4) {
-            DPadDirection.DOWN
-        } else if (y <= 0 && θ.absoluteValue >= PI / 4) {
-            DPadDirection.UP
-        } else if (x > 0 && θ.absoluteValue < PI / 4) {
-            DPadDirection.RIGHT
-        } else {
-            DPadDirection.LEFT
+        val θ = atan2(y, x)
+        direction = when {
+            θ <= PI / 4       && θ > -PI / 4       -> DPadDirection.RIGHT
+            θ <= -PI / 4      && θ > (-3 * PI) / 4 -> DPadDirection.UP
+            θ <= (3 * PI) / 4 && θ > PI / 4        -> DPadDirection.DOWN
+            else                                   -> DPadDirection.LEFT
         }
     }
 
