@@ -5,9 +5,11 @@ object Offsets {
     const val StartBattle = 0x74c1
     const val ExitBattle = 0x769e
     const val Load2DMenuData = 0x1bb1
+    const val BattleMenu = 0x6139
     const val LoadBattleMenu = 0x4ef2
     const val MoveSelectionScreen = 0x64bc
     const val MoveSelectionScreen_use_move = 0x65d9
+    const val MoveSelectionScreen_use_move_not_b = MoveSelectionScreen_use_move + 2
     const val MoveSelectionScreen_battle_player_moves = 0x658e
     const val ListMoves_moves_loop = 0x4d74
     const val ListMoves_after_read_name = 0x4d87

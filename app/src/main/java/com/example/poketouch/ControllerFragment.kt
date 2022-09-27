@@ -88,27 +88,18 @@ class ControllerFragment : Fragment() {
         return view.onTouchEvent(event)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-//        buttonAdapter = ControllerButtonsAdapter(mutableListOf())
-//        binding.buttons.adapter = buttonAdapter
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-    }
 
 
     private fun setDPadFromCoordinates(x: Float, y: Float) {
         val θ = atan(y / x)
         direction = if (y > 0 && θ.absoluteValue > PI / 4) {
-            ControllerFragment.DPadDirection.DOWN
+            DPadDirection.DOWN
         } else if (y <= 0 && θ.absoluteValue >= PI / 4) {
-            ControllerFragment.DPadDirection.UP
+            DPadDirection.UP
         } else if (x > 0 && θ.absoluteValue < PI / 4) {
-            ControllerFragment.DPadDirection.RIGHT
+            DPadDirection.RIGHT
         } else {
-            ControllerFragment.DPadDirection.LEFT
+            DPadDirection.LEFT
         }
     }
 

@@ -49,7 +49,7 @@ class StateManager(
                 subState = null
                 subSubState = null
             }
-            pc == Offsets.LoadBattleMenu -> {
+            pc == Offsets.BattleMenu -> {
                 mainState = MainState.Battle
                 subState = SubState.BattleChoosingAction
                 subSubState = null
@@ -59,16 +59,16 @@ class StateManager(
                 subState = SubState.BattleChoosingMove
                 subSubState = null
             }
-            pc == Offsets.MoveSelectionScreen_use_move -> {
+            pc == Offsets.MoveSelectionScreen_use_move_not_b -> {
                 mainState = MainState.Battle
                 subState = SubState.BattleUsingMove
                 // subSubState has been set by buttonPress
             }
-//            subState == SubState.BattleUsingMove -> {
-//                mainState = MainState.Battle
-//                subState = SubState.BattleWaiting
-//                subSubState = null
-//            }
+            subState == SubState.BattleUsingMove -> {
+                mainState = MainState.Battle
+                subState = SubState.BattleWaiting
+                subSubState = null
+            }
             else -> {
 //                mainState = MainState.Overworld
 //                subState = null
@@ -95,9 +95,9 @@ class StateManager(
             MainState.Battle -> {
                 breakMan.clearPCBreakPoints()
                 breakMan.setPCBreakPoint(Offsets.ExitBattle)
-                breakMan.setPCBreakPoint(Offsets.LoadBattleMenu)
+                breakMan.setPCBreakPoint(Offsets.BattleMenu)
                 breakMan.setPCBreakPoint(Offsets.ListMoves)
-                breakMan.setPCBreakPoint(Offsets.MoveSelectionScreen_use_move)
+                breakMan.setPCBreakPoint(Offsets.MoveSelectionScreen_use_move_not_b)
                 handleBattle()
             }
             else -> {
@@ -135,6 +135,8 @@ class StateManager(
                 }
             }
             SubState.BattleUsingMove -> {
+                activity.runOnUiThread { controller.buttonAdapter.clearOptions() }
+
                 wasmBoy.memory.put(
                     wasmBoy.getWasmBoyOffsetFromGameBoyOffset(Offsets.wMenuCursorY),
                     subSubState!!.toByte()

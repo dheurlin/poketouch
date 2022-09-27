@@ -11,6 +11,7 @@ class ControllerButtonsAdapter(
     ) : RecyclerView.Adapter<ControllerButtonsAdapter.ButtonViewHolder>() {
 
     class ButtonViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+//        public val button: Button = view as Button
         public val button: Button
 
         init {
@@ -31,6 +32,7 @@ class ControllerButtonsAdapter(
                 false
             )
         )
+//        return ButtonViewHolder(Button(parent.context))
     }
 
     override fun onBindViewHolder(holder: ButtonViewHolder, position: Int) {
