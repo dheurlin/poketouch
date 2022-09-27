@@ -15,11 +15,15 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
-class Emulator(rom: InputStream, screenView: ScreenView, controller: ControllerFragment, activity: Activity) {
+class Emulator(
+    rom: InputStream,
+    screenView: ScreenView,
+    private val controller: ControllerFragment,
+    private val activity: Activity
+) {
     private val wasmBoy: WasmBoy = WasmBoy(ByteBuffer.allocate(20_000_000), null)
     private val AUDIO_BUF_TARGET_SIZE = 2 * 4096
     private var audioBufLen = 0
-    private val activity = activity
 
     var running = false
     var shouldLoadState = false
@@ -28,8 +32,8 @@ class Emulator(rom: InputStream, screenView: ScreenView, controller: ControllerF
 
     private lateinit var audio: AudioTrack
     private val screen: ScreenView = screenView
-    private val controller: ControllerFragment = controller
 
+    // TODO Behöver emulatorn en breakman, kan vi inte bara skapa den i stateman?
     private val breakMan: BreakpointManager = BreakpointManager(wasmBoy)
     private val stateMan: StateManager = StateManager(wasmBoy, breakMan, controller, activity)
 
@@ -77,6 +81,7 @@ class Emulator(rom: InputStream, screenView: ScreenView, controller: ControllerF
         audio.play()
     }
 
+    // TODO Kan man göra denna asynkron på nåt sätt? För turbo speed typ
     private fun playAudio() {
         audioBufLen = wasmBoy.numberOfSamplesInAudioBuffer * 2
         val audioArray = ByteArray(audioBufLen)
