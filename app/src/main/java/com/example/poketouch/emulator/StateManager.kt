@@ -17,13 +17,14 @@ class StateManager(
     public enum class SubState {
         BattleWaiting,
         BattleChoosingAction,
+        BattleActionChosen,
         BattleChoosingMove,
-        BattleUsingMove,
+        BattleMoveChosen,
     }
 
     private var mainState: MainState = MainState.Overworld
     private var subState: SubState? = null
-    private var subSubState: Int? = null
+    private var menuOption: Int? = null
 
     init {
         breakMan.clearPCBreakPoints()
@@ -33,41 +34,48 @@ class StateManager(
     private fun setState() {
         val oldMainState = mainState
         val oldSubState = subState
-        val oldSubSubState = subSubState
+        val oldSubSubState = menuOption
 
         val pc = wasmBoy.programCounter
         val bank = getRomBank()
 
+        // TODO Outer condition on MainState?
         when {
             pc == Offsets.StartBattle -> {
                 mainState = MainState.Battle
                 subState = SubState.BattleWaiting
-                subSubState = null
+                menuOption = null
            }
             pc == Offsets.ExitBattle -> {
                 mainState = MainState.Overworld
                 subState = null
-                subSubState = null
+                menuOption = null
             }
             pc == Offsets.BattleMenu -> {
                 mainState = MainState.Battle
                 subState = SubState.BattleChoosingAction
-                subSubState = null
+                menuOption = null
+            }
+            pc == Offsets.BattleMenu_next && bank == Offsets.RomBankBattleMenu -> {
+                mainState = MainState.Battle
+                subState = SubState.BattleActionChosen
+                // set by button press
+                // menuOption = null
             }
             pc == Offsets.ListMoves && bank == Offsets.RomBankBattle -> {
                 mainState = MainState.Battle
                 subState = SubState.BattleChoosingMove
-                subSubState = null
+                menuOption = null
             }
             pc == Offsets.MoveSelectionScreen_use_move_not_b -> {
                 mainState = MainState.Battle
-                subState = SubState.BattleUsingMove
+                subState = SubState.BattleMoveChosen
                 // subSubState has been set by buttonPress
             }
-            subState == SubState.BattleUsingMove -> {
+            subState == SubState.BattleMoveChosen -> {
                 mainState = MainState.Battle
                 subState = SubState.BattleWaiting
-                subSubState = null
+                menuOption = null
             }
             else -> {
 //                mainState = MainState.Overworld
@@ -75,8 +83,10 @@ class StateManager(
             }
         }
 
-        if (mainState != oldMainState || subState != oldSubState || subSubState != oldSubSubState) {
-            println("### Setting new state: $mainState, $subState, $subSubState")
+        if (mainState != oldMainState || subState != oldSubState || menuOption != oldSubSubState) {
+            val bankStr = "%02x".format(bank)
+            val pcStr = "%04x".format(pc)
+            println("### [\$$bankStr:$pcStr] Setting new state: $mainState, $subState, $menuOption")
         }
     }
 
@@ -96,6 +106,7 @@ class StateManager(
                 breakMan.clearPCBreakPoints()
                 breakMan.setPCBreakPoint(Offsets.ExitBattle)
                 breakMan.setPCBreakPoint(Offsets.BattleMenu)
+                breakMan.setPCBreakPoint(Offsets.BattleMenu_next)
                 breakMan.setPCBreakPoint(Offsets.ListMoves)
                 breakMan.setPCBreakPoint(Offsets.MoveSelectionScreen_use_move_not_b)
                 handleBattle()
@@ -117,9 +128,23 @@ class StateManager(
             SubState.BattleChoosingAction -> {
                 activity.runOnUiThread {
                     controller.buttonAdapter.clearOptions()
+                    controller.releaseButtons()
+                    listOf("FIGHT", "POKÉMON", "PACK", "RUN").forEach {
+                        controller.buttonAdapter.addOption(it) { ix ->
+                            menuOption = ix + 1 // 1 indexed
+                            controller.aButton = true
+                        }
+                    }
                 }
             }
-            // BUG: App crashes when pressing back here!
+            SubState.BattleActionChosen -> {
+                activity.runOnUiThread { controller.buttonAdapter.clearOptions() }
+
+                wasmBoy.memory.put(
+                    wasmBoy.getWasmBoyOffsetFromGameBoyOffset(Offsets.wBattleMenuCursorPosition),
+                    menuOption!!.toByte()
+                )
+            }
             SubState.BattleChoosingMove -> {
                 val moveNums = getBytes(Offsets.wListMoves_MoveIndicesBuffer, 4)
                 val moveNames = getMoveNames(moveNums)
@@ -128,18 +153,18 @@ class StateManager(
                     controller.releaseButtons()
                     for (s in moveNames) {
                         controller.buttonAdapter.addOption(s) {
-                            subSubState = it
+                            menuOption = it
                             controller.aButton = true
                         }
                     }
                 }
             }
-            SubState.BattleUsingMove -> {
+            SubState.BattleMoveChosen -> {
                 activity.runOnUiThread { controller.buttonAdapter.clearOptions() }
 
                 wasmBoy.memory.put(
                     wasmBoy.getWasmBoyOffsetFromGameBoyOffset(Offsets.wMenuCursorY),
-                    subSubState!!.toByte()
+                    menuOption!!.toByte()
                 )
             }
         }

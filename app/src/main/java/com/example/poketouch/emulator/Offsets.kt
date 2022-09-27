@@ -6,6 +6,7 @@ object Offsets {
     const val ExitBattle = 0x769e
     const val Load2DMenuData = 0x1bb1
     const val BattleMenu = 0x6139
+    const val BattleMenu_next = 0x6175
     const val LoadBattleMenu = 0x4ef2
     const val MoveSelectionScreen = 0x64bc
     const val MoveSelectionScreen_use_move = 0x65d9
@@ -25,6 +26,7 @@ object Offsets {
     const val wListMoves_MoveIndicesBuffer = 0xd25e
     const val wCurMoveNum = 0xd0d5
     const val wMenuCursorY = 0xcfa9
+    const val wBattleMenuCursorPosition = 0xd0d2
     const val hROMBank = 0xff9d
     const val MoveNames = 0x5f29
     const val MoveNameLength = 13
@@ -32,6 +34,7 @@ object Offsets {
 
     // ROM banks
     const val RomBankBattle = 0x14
+    const val RomBankBattleMenu = 0x0f
     const val RomBankNames = 0x72
 
     // WasmBoy memory offsets
