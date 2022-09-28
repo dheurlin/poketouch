@@ -2,11 +2,10 @@ package com.example.poketouch.emulator
 
 import WasmBoy
 import android.app.Activity
-import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
-import com.example.poketouch.ControllerFragment
+import com.example.poketouch.controller.ControllerFragment
 import com.example.poketouch.ScreenView
 import java.io.File
 import java.io.FileInputStream

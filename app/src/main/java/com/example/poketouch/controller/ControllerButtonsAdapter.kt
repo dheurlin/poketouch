@@ -1,10 +1,11 @@
-package com.example.poketouch
+package com.example.poketouch.controller
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.recyclerview.widget.RecyclerView
+import com.example.poketouch.R
 
 class ControllerButtonsAdapter(
     private val options: MutableList<ControllerButtonOption>

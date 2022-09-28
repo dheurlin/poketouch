@@ -2,7 +2,7 @@ package com.example.poketouch.emulator
 
 import WasmBoy
 import android.app.Activity
-import com.example.poketouch.ControllerFragment
+import com.example.poketouch.controller.ControllerFragment
 
 class StateManager(
     private val wasmBoy: WasmBoy,
@@ -98,6 +98,7 @@ class StateManager(
             MainState.Overworld -> {
                 activity.runOnUiThread {
                     controller.buttonAdapter.clearOptions()
+                    controller.showDPad()
                 }
                 breakMan.clearPCBreakPoints()
                 breakMan.setPCBreakPoint(Offsets.StartBattle)
@@ -123,10 +124,12 @@ class StateManager(
 //               println("just waiting...")
                 activity.runOnUiThread {
                     controller.buttonAdapter.clearOptions()
+                    controller.showDPad()
                 }
             }
             SubState.BattleChoosingAction -> {
                 activity.runOnUiThread {
+                    controller.hideDPad()
                     controller.buttonAdapter.clearOptions()
                     controller.releaseButtons()
                     listOf("FIGHT", "POKÉMON", "PACK", "RUN").forEach {
@@ -138,7 +141,11 @@ class StateManager(
                 }
             }
             SubState.BattleActionChosen -> {
-                activity.runOnUiThread { controller.buttonAdapter.clearOptions() }
+                activity.runOnUiThread {
+                    controller.buttonAdapter.clearOptions()
+                    // Unless fight chosen
+                    if (menuOption != 1) controller.showDPad()
+                }
 
                 wasmBoy.memory.put(
                     wasmBoy.getWasmBoyOffsetFromGameBoyOffset(Offsets.wBattleMenuCursorPosition),
@@ -149,6 +156,7 @@ class StateManager(
                 val moveNums = getBytes(Offsets.wListMoves_MoveIndicesBuffer, 4)
                 val moveNames = getMoveNames(moveNums)
                 activity.runOnUiThread {
+                    controller.hideDPad()
                     controller.buttonAdapter.clearOptions()
                     controller.releaseButtons()
                     for (s in moveNames) {
@@ -160,7 +168,10 @@ class StateManager(
                 }
             }
             SubState.BattleMoveChosen -> {
-                activity.runOnUiThread { controller.buttonAdapter.clearOptions() }
+                activity.runOnUiThread {
+                    controller.buttonAdapter.clearOptions()
+                    controller.showDPad()
+                }
 
                 wasmBoy.memory.put(
                     wasmBoy.getWasmBoyOffsetFromGameBoyOffset(Offsets.wMenuCursorY),

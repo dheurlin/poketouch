@@ -1,6 +1,5 @@
-package com.example.poketouch
+package com.example.poketouch.controller
 
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -8,7 +7,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.poketouch.databinding.FragmentControllerBinding
 import kotlin.math.*
 
@@ -48,6 +46,14 @@ class ControllerFragment : Fragment() {
         binding.buttons.layoutManager = LinearLayoutManager(this.context)
 
         return root
+    }
+
+    fun hideDPad() {
+        binding.pokeBall.visibility = View.INVISIBLE
+    }
+
+    fun showDPad() {
+        binding.pokeBall.visibility = View.VISIBLE
     }
 
     private fun onTouch(view: View?, event: MotionEvent?): Boolean {
