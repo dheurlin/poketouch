@@ -33,7 +33,7 @@ class Emulator(
     private lateinit var audio: AudioTrack
     private val screen: ScreenView = screenView
 
-    // TODO Behöver emulatorn en breakman, kan vi inte bara skapa den i stateman?
+    // TODOTODO  Behöver emulatorn en breakman, kan vi inte bara skapa den i stateman?
     private val breakMan: BreakpointManager = BreakpointManager(wasmBoy)
     private val stateMan: StateManager = StateManager(wasmBoy, breakMan, controller, activity)
 

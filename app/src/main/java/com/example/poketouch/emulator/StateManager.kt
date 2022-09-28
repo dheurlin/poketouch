@@ -10,11 +10,11 @@ class StateManager(
     private val controller: ControllerFragment,
     private val activity: Activity,
     ) {
-    public enum class MainState {
+    enum class MainState {
         Battle,
         Overworld,
     }
-    public enum class SubState {
+    enum class SubState {
         BattleWaiting,
         BattleChoosingAction,
         BattleActionChosen,
