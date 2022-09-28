@@ -10,10 +10,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.poketouch.databinding.FragmentControllerBinding
-import kotlin.math.PI
-import kotlin.math.absoluteValue
-import kotlin.math.atan
-import kotlin.math.atan2
+import kotlin.math.*
 
 class ControllerFragment : Fragment() {
 
@@ -81,9 +78,10 @@ class ControllerFragment : Fragment() {
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
-                // TODO Only if we have moved a certain distance?
-                setDPadFromCoordinates(xCentered, yCentered)
-                return true
+                if (direction != null) {
+                    setDPadFromCoordinates(xCentered, yCentered)
+                    return true
+                }
             }
         }
         return view.onTouchEvent(event)
